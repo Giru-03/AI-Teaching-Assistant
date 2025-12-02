@@ -1,0 +1,34 @@
+{
+  "name": "agentic-ai-teaching-assistant",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "assemblyai": "^4.19.0",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "groq-sdk": "^0.37.0",
+    "jsonrepair": "^3.13.0",
+    "jszip": "^3.10.1",
+    "multer": "^2.0.2",
+    "node-fetch": "^3.3.2",
+    "openai": "^5.12.0",
+    "pdfjs-dist": "^5.4.449",
+    "pdfkit": "^0.17.2",
+    "pptxgenjs": "^3.12.0",
+    "sharp": "^0.34.3"
+  },
+  "devDependencies": {
+    "@types/node-fetch": "^2.6.13"
+  }
+}

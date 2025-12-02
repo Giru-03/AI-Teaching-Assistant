@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.prose h3 {
+  @apply text-lg font-bold text-blue-700 mt-4 mb-2;
+}
+
+.prose p {
+  @apply mb-2;
+}
