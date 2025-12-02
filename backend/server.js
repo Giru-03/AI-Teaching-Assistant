@@ -12,6 +12,7 @@ import { transcribeAudio } from "./agent/audioUtils.js";
 import { createPresentation } from "./agent/pptGenerator.js";
 import { createPdfSummary } from "./agent/pdfGenerator.js";
 import { evaluateAnswerAsTutor } from './agent/tutorAgent.js';
+import { ragEngine } from "./agent/ragEngine.js";
 
 
 const app = express();
@@ -60,8 +61,15 @@ app.post("/api/generate-content", upload.single("file"), async (req, res) => {
       }
 
       if (extractedText) {
+        // --- RAG INTEGRATION ---
+        console.log("Indexing document for RAG...");
+        await ragEngine.addDocument(extractedText, req.file.originalname);
+        
+        console.log("Retrieving relevant context...");
+        const ragContext = await ragEngine.retrieve(`${topic} ${gradeLevel}`, 5); // Retrieve top 5 chunks
+
         // Prioritize the extracted text, using the textarea for additional notes
-        referenceText = `Primary source text from file (${req.file.originalname}):\n${extractedText}\n\nAdditional teacher notes:\n${content}`;
+        referenceText = `Primary source text (RAG Retrieved Context from ${req.file.originalname}):\n${ragContext}\n\nAdditional teacher notes:\n${content}`;
       }
     }
     // --- END OF NEW LOGIC ---
@@ -122,10 +130,15 @@ app.post("/api/summarize-from-pdf", upload.single("file"), async (req, res) => {
   try {
     const { topic, gradeLevel, durationMinutes, proficiencyNotes, conversationHistory } = req.body;
     const text = await extractPdfText(req.file?.path);
+    
+    // --- RAG INTEGRATION ---
+    await ragEngine.addDocument(text, req.file?.originalname || "uploaded_pdf");
+    const ragContext = await ragEngine.retrieve(`${topic} ${gradeLevel}`, 7); // More chunks for summarization
+
     const data = await generateTeachingContent({
       topic,
       gradeLevel,
-      reference: text,
+      reference: ragContext, // Use RAG context instead of full text
       durationMinutes: Number(durationMinutes) || undefined,
       proficiencyNotes,
       conversationHistory: JSON.parse(conversationHistory || '[]'),
