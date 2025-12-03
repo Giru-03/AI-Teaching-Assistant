@@ -21,13 +21,9 @@ export async function createPdfSummary(topic, summaryHtml) {
 
       doc.pipe(stream);
 
-      // Title
       doc.fontSize(24).text(`Lesson Summary: ${topic}`, { align: 'center' });
       doc.moveDown();
 
-      // Convert simple HTML to text (basic stripping)
-      // Note: For robust HTML-to-PDF, we'd need puppeteer, but pdfkit is lighter.
-      // We will strip tags and try to format headings.
       
       const lines = summaryHtml
         .replace(/<h3>/g, '\n\nHEADING: ')

@@ -3,14 +3,13 @@ import { pipeline } from '@xenova/transformers';
 class RAGEngine {
   constructor() {
     this.extractor = null;
-    this.documents = []; // { id, text, embedding }
+    this.documents = []; 
     this.isInitialized = false;
   }
 
   async init() {
     if (this.isInitialized) return;
     console.log("Loading embedding model...");
-    // Using a small, fast model suitable for local execution
     this.extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
     this.isInitialized = true;
     console.log("Embedding model loaded.");
@@ -18,8 +17,6 @@ class RAGEngine {
 
   async embed(text) {
     if (!this.isInitialized) await this.init();
-    // pooling: 'mean' averages the token embeddings to get a sentence embedding
-    // normalize: true ensures the vectors are unit length for cosine similarity
     const output = await this.extractor(text, { pooling: 'mean', normalize: true });
     return output.data;
   }
@@ -47,7 +44,6 @@ class RAGEngine {
   async addDocument(text, sourceId = 'default') {
     if (!this.isInitialized) await this.init();
     
-    // Remove existing chunks for this source to avoid duplicates if re-uploaded
     this.documents = this.documents.filter(d => d.sourceId !== sourceId);
 
     const chunks = this.chunkText(text);
@@ -94,7 +90,6 @@ class RAGEngine {
       score: this.cosineSimilarity(queryEmbedding, doc.embedding)
     }));
 
-    // Sort by score descending
     scored.sort((a, b) => b.score - a.score);
     
     const topK = scored.slice(0, k);

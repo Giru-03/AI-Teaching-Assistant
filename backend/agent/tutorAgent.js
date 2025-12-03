@@ -1,4 +1,4 @@
-import { callAI } from './agenticAI.js'; // Assuming callAI is exported from your main agent
+import { callAI } from './agenticAI.js'; 
 
 /**
  * Evaluates a student's answer using an AI tutor prompt.
@@ -24,11 +24,9 @@ export async function evaluateAnswerAsTutor({ question, options, answer, rationa
     4.  Your entire response must be in a JSON object format with two keys: "isCorrect" (boolean) and "feedback" (string).
   `;
 
-  // Use your existing callAI function and its JSON parsing
   const messages = [{ role: 'user', content: prompt }];
-  const result = await callAI(messages); // Assuming callAI handles the API call and safeParseJson
+  const result = await callAI(messages); 
 
-  // A fallback in case the AI fails to return valid JSON
   if (!result || typeof result.isCorrect === 'undefined') {
     if (userAnswer.toLowerCase().includes(answer.toLowerCase())) {
         return { isCorrect: true, feedback: `That's correct! The answer is ${answer} because ${rationale}.` };

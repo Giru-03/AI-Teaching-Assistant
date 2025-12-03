@@ -30,20 +30,19 @@ if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 app.use("/downloads", express.static(downloadsDir));
 const upload = multer({ dest: uploadsDir });
 
-/** 1) All-in-one: summary + quiz + PPT */
 app.post("/api/generate-content", upload.single("file"), async (req, res) => {
   try {
-    // Get all parameters from the form data
+
     const {
       topic,
       gradeLevel,
-      content, // Text from the textarea
-      conversationHistory, // Conversation history for refinement
+      content, 
+      conversationHistory,
     } = req.body || {};
 
-    let referenceText = content; // Default to the textarea content
+    let referenceText = content;
 
-    // --- NEW LOGIC: Check for uploaded files (PDF or Audio/Video) ---
+
     if (req.file) {
       console.log(`File detected: ${req.file.originalname} (${req.file.mimetype})`);
       let extractedText = "";
@@ -56,29 +55,24 @@ app.post("/api/generate-content", upload.single("file"), async (req, res) => {
          console.log("Processing Audio/Video...");
          extractedText = await transcribeAudio(req.file.path);
       } else {
-         // Fallback for other text-based files if needed, or just ignore
          console.log("Unsupported file type for extraction, ignoring.");
       }
 
       if (extractedText) {
-        // --- RAG INTEGRATION ---
         console.log("Indexing document for RAG...");
         await ragEngine.addDocument(extractedText, req.file.originalname);
         
         console.log("Retrieving relevant context...");
-        const ragContext = await ragEngine.retrieve(`${topic} ${gradeLevel}`, 5); // Retrieve top 5 chunks
+        const ragContext = await ragEngine.retrieve(`${topic} ${gradeLevel}`, 5); 
 
-        // Prioritize the extracted text, using the textarea for additional notes
         referenceText = `Primary source text (RAG Retrieved Context from ${req.file.originalname}):\n${ragContext}\n\nAdditional teacher notes:\n${content}`;
       }
     }
-    // --- END OF NEW LOGIC ---
 
     const result = await generateTeachingContent({
       topic,
       gradeLevel,
-      reference: referenceText, // Use the potentially combined reference text
-      // We need to parse the history as it comes from FormData as a string
+      reference: referenceText, 
       conversationHistory: JSON.parse(conversationHistory || '[]'),
     });
     if (result.error) return res.status(400).json(result);
@@ -92,14 +86,12 @@ app.post("/api/generate-content", upload.single("file"), async (req, res) => {
     console.error("Content generation error:", e);
     res.status(500).json({ error: "Server crashed", details: e.message });
   } finally {
-    // **IMPORTANT**: Clean up the uploaded file after processing
     if (req.file?.path) {
       fs.unlink(req.file.path, () => {});
     }
   }
 });
 
-/** 2) Quiz only (Bloom’s + difficulty + rationale) */
 app.post("/api/generate-quiz", async (req, res) => {
   try {
     const { conversationHistory, ...body } = req.body;
@@ -114,7 +106,6 @@ app.post("/api/generate-quiz", async (req, res) => {
   }
 });
 
-/** 3) Summarize (duration-aware) from pasted text */
 app.post("/api/summarize", async (req, res) => {
   try {
     const data = await generateTeachingContent({ ...req.body });
@@ -125,7 +116,6 @@ app.post("/api/summarize", async (req, res) => {
   }
 });
 
-/** 4) Summarize from PDF upload */
 app.post("/api/summarize-from-pdf", upload.single("file"), async (req, res) => {
   try {
     const { topic, gradeLevel, durationMinutes, proficiencyNotes, conversationHistory } = req.body;

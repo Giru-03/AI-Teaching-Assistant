@@ -34,7 +34,6 @@ function safeParseJson(rawText = "") {
   }
 }
 
-/* ---------------- AI caller (Groq) ---------------- */
 export async function callAI(messages) {
   try {
     const completion = await groq.chat.completions.create({
@@ -57,9 +56,9 @@ export async function callAI(messages) {
   }
 }
 
-/* ---------------- Relevance Check ---------------- */
+
 export async function validateContentRelevance(topic, content) {
-  if (!content || content.length < 50) return true; // Too short to validate, assume relevant or ignore
+  if (!content || content.length < 50) return true; 
   
   const prompt = `
     You are a strict content validator.
@@ -84,25 +83,22 @@ export async function validateContentRelevance(topic, content) {
     return parsed;
   } catch (e) {
     console.error("Relevance check failed:", e);
-    return { relevant: true }; // Fail open if API error
+    return { relevant: true }; 
   }
 }
 
-/* ---------------- Simple markdown→HTML fallback ---------------- */
+
 function mdToHtml(md = "") {
   let s = (md || "").trim();
 
-  // emphasis
   s = s.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   s = s.replace(/__(.*?)__/g, "<strong>$1</strong>");
   s = s.replace(/\*(.*?)\*/g, "<em>$1</em>");
 
-  // headings -> h3
   s = s.replace(/^###\s?(.*)$/gm, "<h3>$1</h3>");
   s = s.replace(/^##\s?(.*)$/gm, "<h3>$1</h3>");
   s = s.replace(/^#\s?(.*)$/gm, "<h3>$1</h3>");
 
-  // lists (unordered + ordered)
   s = s.replace(
     /(^|\n)(?:\s*[-*]\s.+\n?)+/g,
     (block) => {
@@ -130,7 +126,6 @@ function mdToHtml(md = "") {
     }
   );
 
-  // paragraphs
   s = s
     .split(/\n{2,}/)
     .map((para) =>
@@ -140,12 +135,10 @@ function mdToHtml(md = "") {
     )
     .join("\n");
 
-  // final safety: remove any stray **
   s = s.replace(/\*\*/g, "");
   return s;
 }
 
-/* ---------------- main generator ---------------- */
 export async function generateTeachingContent({
   topic,
   gradeLevel,
@@ -157,12 +150,11 @@ export async function generateTeachingContent({
   questionTypes = ["MCQ"],
   conversationHistory = [],
 }) {
-  // 1. Validate Inputs
+
   if (!topic || !gradeLevel) {
       return { error: "Topic and Grade Level are required." };
   }
 
-  // 2. Relevance Check (if reference exists)
   if (reference && reference.length > 50) {
       const check = await validateContentRelevance(topic, reference);
       if (check && check.relevant === false) {
@@ -170,7 +162,6 @@ export async function generateTeachingContent({
       }
   }
 
-  // normalize difficulty split to exactly 10
   const total =
     (difficultySplit.easy || 0) +
     (difficultySplit.medium || 0) +
@@ -206,8 +197,8 @@ export async function generateTeachingContent({
   });
 
   if (formattedHistory.length > 0) {
-    // When refining, add a new instruction to the history
-    const lastUserMessage = formattedHistory.pop(); // Get the user's latest message
+
+    const lastUserMessage = formattedHistory.pop(); 
     const refinementInstruction = `
       **CRITICAL REFINEMENT INSTRUCTION:**
       A user has requested a change to the previous JSON output. Their instruction is: "${lastUserMessage.content}"
@@ -217,12 +208,10 @@ export async function generateTeachingContent({
       DO NOT respond with only the changed part or a simple text message. The output must be the full JSON object.
     `;
     
-    // Rebuild the history with the new, more explicit instruction
     const refinedUserMessage = { role: 'user', content: refinementInstruction };
     messages = [...formattedHistory, refinedUserMessage];
 
   }  else {
-    // Otherwise, create the initial prompt
     const initialPrompt = `You are an advanced Agentic AI Teaching Assistant. Your goal is to generate high-quality educational materials by acting as an expert curriculum designer.
 
 INPUT
@@ -284,13 +273,12 @@ Include a "reasoning" field in the JSON where you briefly explain your design ch
 
   let {
     lesson_summary_html,
-    lesson_summary, // in case model returned old field
+    lesson_summary,
     pacing_plan,
     quiz,
     ppt,
   } = parsed;
 
-  // Fallbacks & cleanup
   let html = (lesson_summary_html || "").trim();
   if (!html && lesson_summary) html = mdToHtml(lesson_summary);
   if (html.includes("**")) html = html.replace(/\*\*/g, "");

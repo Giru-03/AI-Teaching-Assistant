@@ -9,7 +9,7 @@ export async function createPresentation(presentationData = []) {
   const textColor = "FFFFFF";
   const contentColor = "000000";
 
-  // Title slide
+
   const titleSlide = pptx.addSlide();
   titleSlide.background = { color: themeColor };
   titleSlide.addText("Agentic AI - Teaching Assistant", {
@@ -20,7 +20,7 @@ export async function createPresentation(presentationData = []) {
     x: 1, y: 3, w: 8, h: 1, fontSize: 24, color: textColor, align: "center",
   });
 
-  // Content slides
+
   presentationData.forEach((slideData, index) => {
     if (index === 0) return;
     const slide = pptx.addSlide();
