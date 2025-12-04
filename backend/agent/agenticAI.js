@@ -5,9 +5,19 @@ import { jsonrepair } from "jsonrepair";
 dotenv.config();
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-const groq = new Groq({
-    apiKey: GROQ_API_KEY
-});
+let groqInstance = null;
+function getGroqClient() {
+    if (!groqInstance) {
+        if (!process.env.GROQ_API_KEY) {
+            console.error("GROQ_API_KEY is missing from environment variables!");
+            throw new Error("GROQ_API_KEY is missing");
+        }
+        groqInstance = new Groq({
+            apiKey: process.env.GROQ_API_KEY
+        });
+    }
+    return groqInstance;
+}
 
 function stripCodeFences(s = "") {
   return s.replace(/```json/gi, "").replace(/```/g, "").trim();
@@ -36,7 +46,7 @@ function safeParseJson(rawText = "") {
 
 export async function callAI(messages) {
   try {
-    const completion = await groq.chat.completions.create({
+    const completion = await getGroqClient().chat.completions.create({
       messages: messages,
       model: "llama-3.3-70b-versatile",
       response_format: { type: "json_object" },
@@ -73,7 +83,7 @@ export async function validateContentRelevance(topic, content) {
   `;
 
   try {
-    const completion = await groq.chat.completions.create({
+    const completion = await getGroqClient().chat.completions.create({
       messages: [{ role: "user", content: prompt }],
       model: "llama-3.3-70b-versatile",
       response_format: { type: "json_object" },
