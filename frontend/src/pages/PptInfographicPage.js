@@ -115,7 +115,7 @@ export default function PptInfographicPage() {
             {/* PPT Download */}
             {result.pptFile && (
               <a
-                href={`${API_BASE}/${result.pptFile}`}
+                href={result.pptFile.startsWith('http') ? result.pptFile : `${API_BASE}/${result.pptFile}`}
                 download
                 className="w-full text-center bg-green-500 text-white px-4 py-3 rounded hover:bg-green-600 font-semibold"
               >

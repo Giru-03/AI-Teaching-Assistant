@@ -4,6 +4,11 @@ import path from "path";
 import { fileURLToPath } from "url";
 import multer from "multer";
 import fs from "fs";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 import { generateTeachingContent } from "./agent/agenticAI.js";
 import { generateQuiz } from "./agent/quizGenerator.js";
@@ -19,16 +24,22 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "12mb" }));
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Cloudinary Configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const downloadsDir = path.join(__dirname, "downloads");
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(downloadsDir)) fs.mkdirSync(downloadsDir);
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "ai-teaching-assistant",
+    resource_type: "auto",
+  },
+});
 
-app.use("/downloads", express.static(downloadsDir));
-const upload = multer({ dest: uploadsDir });
+const upload = multer({ storage: storage });
 
 app.post("/api/generate-content", upload.single("file"), async (req, res) => {
   try {
@@ -80,17 +91,17 @@ app.post("/api/generate-content", upload.single("file"), async (req, res) => {
     const pptFile = await createPresentation(result.ppt);
     const pdfFile = await createPdfSummary(topic, result.lesson_summary_html || result.lesson_summary);
     
+    console.log("Generated PPT:", pptFile);
+    console.log("Generated PDF:", pdfFile);
+
     res.json({ ...result, pptFile, pdfFile });
 
   } catch (e) {
     console.error("Content generation error:", e);
     res.status(500).json({ error: "Server crashed", details: e.message });
-  } finally {
-    if (req.file?.path) {
-      fs.unlink(req.file.path, () => {});
-    }
   }
 });
+
 
 app.post("/api/generate-quiz", async (req, res) => {
   try {
@@ -137,8 +148,6 @@ app.post("/api/summarize-from-pdf", upload.single("file"), async (req, res) => {
     res.json(data);
   } catch (e) {
     res.status(500).json({ error: "PDF summarization failed", details: e.message });
-  } finally {
-    if (req.file?.path) fs.unlink(req.file.path, () => {});
   }
 });
 
@@ -185,6 +194,11 @@ app.post("/api/evaluate-answer", async (req, res) => {
   }
 });
 
-app.listen(5000, () =>
-  console.log("✅ Backend running at http://localhost:5000")
-);
+const PORT = process.env.PORT || 5000;
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () =>
+      console.log(`✅ Backend running at http://localhost:${PORT}`)
+    );
+}
+
+export default app;

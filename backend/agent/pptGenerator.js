@@ -1,6 +1,6 @@
 import PptxGenJS from "pptxgenjs";
-import fs from "fs";
-import path from "path";
+import { v2 as cloudinary } from "cloudinary";
+import stream from "stream";
 
 export async function createPresentation(presentationData = []) {
   const pptx = new PptxGenJS();
@@ -52,9 +52,23 @@ export async function createPresentation(presentationData = []) {
     });
   });
 
-  const downloadDir = path.resolve("downloads");
-  if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
-  const filePath = path.resolve(downloadDir, `presentation_${Date.now()}.pptx`);
-  await pptx.writeFile({ fileName: filePath });
-  return `downloads/${path.basename(filePath)}`;
+  const buffer = await pptx.write("nodebuffer");
+
+  return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+          { 
+            resource_type: "raw", 
+            type: "upload",
+            folder: "ai-teaching-assistant", 
+            format: "pptx"
+          },
+          (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+          }
+      );
+      const bufferStream = new stream.PassThrough();
+      bufferStream.end(buffer);
+      bufferStream.pipe(uploadStream);
+  });
 }

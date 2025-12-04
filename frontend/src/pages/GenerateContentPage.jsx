@@ -148,8 +148,8 @@ const GenerateContentPage = () => {
                 ))}
               </ul>
             )}
-            {result.pptFile && (<a href={`${API_BASE}/${result.pptFile}`} download className="mt-4 inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">⬇️ Download Presentation (PPTX)</a>)}
-            {result.pdfFile && (<a href={`${API_BASE}/${result.pdfFile}`} download className="mt-4 ml-4 inline-block bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">⬇️ Download Summary (PDF)</a>)}
+            {result.pptFile && (<a href={result.pptFile.startsWith('http') ? result.pptFile : `${API_BASE}/${result.pptFile}`} download className="mt-4 inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">⬇️ Download Presentation (PPTX)</a>)}
+            {result.pdfFile && (<a href={result.pdfFile.startsWith('http') ? result.pdfFile : `${API_BASE}/${result.pdfFile}`} download className="mt-4 ml-4 inline-block bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">⬇️ Download Summary (PDF)</a>)}
           </div>
         )}
         {result && (

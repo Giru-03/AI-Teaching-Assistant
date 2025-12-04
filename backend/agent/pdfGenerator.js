@@ -1,25 +1,31 @@
 import PDFDocument from 'pdfkit';
-import fs from 'fs';
-import path from 'path';
+import { v2 as cloudinary } from "cloudinary";
 
 /**
  * Generates a PDF file from the lesson summary HTML (converted to text/simple format).
  * @param {string} topic - The topic of the lesson.
  * @param {string} summaryHtml - The HTML summary content.
- * @returns {Promise<string>} - The relative path to the generated PDF file.
+ * @returns {Promise<string>} - The Cloudinary URL to the generated PDF file.
  */
 export async function createPdfSummary(topic, summaryHtml) {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument();
-      const downloadDir = path.resolve("downloads");
-      if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
       
-      const fileName = `summary_${Date.now()}.pdf`;
-      const filePath = path.join(downloadDir, fileName);
-      const stream = fs.createWriteStream(filePath);
+      const uploadStream = cloudinary.uploader.upload_stream(
+          { 
+            resource_type: "auto", 
+            type: "upload",
+            folder: "ai-teaching-assistant", 
+            format: "pdf"
+          },
+          (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+          }
+      );
 
-      doc.pipe(stream);
+      doc.pipe(uploadStream);
 
       doc.fontSize(24).text(`Lesson Summary: ${topic}`, { align: 'center' });
       doc.moveDown();
@@ -63,14 +69,6 @@ export async function createPdfSummary(topic, summaryHtml) {
       });
 
       doc.end();
-
-      stream.on('finish', () => {
-        resolve(`downloads/${fileName}`);
-      });
-
-      stream.on('error', (err) => {
-        reject(err);
-      });
 
     } catch (error) {
       reject(error);
