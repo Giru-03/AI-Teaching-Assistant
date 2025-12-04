@@ -21,6 +21,8 @@ import { ragEngine } from "./agent/ragEngine.js";
 
 
 const app = express();
+console.log("Starting Server..."); // Debug log
+
 app.use(cors({
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
