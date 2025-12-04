@@ -1,4 +1,3 @@
-import PDFDocument from 'pdfkit';
 import { v2 as cloudinary } from "cloudinary";
 
 /**
@@ -8,6 +7,8 @@ import { v2 as cloudinary } from "cloudinary";
  * @returns {Promise<string>} - The Cloudinary URL to the generated PDF file.
  */
 export async function createPdfSummary(topic, summaryHtml) {
+  // Dynamic import for pdfkit
+  const PDFDocument = (await import('pdfkit')).default;
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument();

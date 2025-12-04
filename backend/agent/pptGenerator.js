@@ -1,8 +1,9 @@
-import PptxGenJS from "pptxgenjs";
 import { v2 as cloudinary } from "cloudinary";
 import stream from "stream";
 
 export async function createPresentation(presentationData = []) {
+  // Dynamic import for pptxgenjs
+  const PptxGenJS = (await import("pptxgenjs")).default;
   const pptx = new PptxGenJS();
 
   const themeColor = "2F5597";

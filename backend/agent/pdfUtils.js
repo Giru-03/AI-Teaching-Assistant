@@ -1,8 +1,9 @@
 import fs from "fs";
-import pdf from "pdf-parse";
 import fetch from "node-fetch";
 
 export async function extractPdfText(pdfPath) {
+  // Dynamic import for pdf-parse
+  const pdf = (await import("pdf-parse")).default;
   let dataBuffer;
   
   if (pdfPath.startsWith("http://") || pdfPath.startsWith("https://")) {
