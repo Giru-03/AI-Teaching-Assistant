@@ -24,6 +24,10 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "12mb" }));
 
+app.get("/", (req, res) => {
+    res.send("AI Teaching Assistant Backend is Running!");
+});
+
 // Cloudinary Configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

@@ -1,4 +1,9 @@
-import { pipeline } from '@xenova/transformers';
+import { pipeline, env } from '@xenova/transformers';
+
+// Configure cache directory for Vercel (read-only file system except /tmp)
+env.cacheDir = '/tmp/.cache';
+env.allowLocalModels = false; // Force download from remote if not found
+env.useBrowserCache = false;
 
 class RAGEngine {
   constructor() {
@@ -10,9 +15,15 @@ class RAGEngine {
   async init() {
     if (this.isInitialized) return;
     console.log("Loading embedding model...");
-    this.extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-    this.isInitialized = true;
-    console.log("Embedding model loaded.");
+    try {
+        this.extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+        this.isInitialized = true;
+        console.log("Embedding model loaded.");
+    } catch (error) {
+        console.error("Failed to load embedding model:", error);
+        // Fallback or rethrow? Rethrowing will cause the request to fail, which is correct.
+        throw error;
+    }
   }
 
   async embed(text) {
