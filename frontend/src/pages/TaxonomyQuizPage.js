@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+const API_BASE = (process.env.REACT_APP_API_BASE_URL || "http://localhost:5000").replace(/\/$/, "");
 const ALL_BLOOMS = ["Remember","Understand","Apply","Analyze","Evaluate","Create"];
 
 export default function TaxonomyQuizPage() {
